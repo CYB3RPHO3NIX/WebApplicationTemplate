@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
+using Serilog;
 using System.Data;
 
 namespace WebApplication.Controllers
@@ -54,8 +55,16 @@ namespace WebApplication.Controllers
                 parameters.Add("IsSuccess", IsSuccess, DbType.Boolean, ParameterDirection.Output);
                 parameters.Add("Message", responseMessage, DbType.String, ParameterDirection.Output);
                 dbConnection.Query("dbo.InsertUser", parameters, commandType: CommandType.StoredProcedure);
+
                 IsSuccess = parameters.Get<bool>("IsSuccess");
                 responseMessage = parameters.Get<string>("Message");
+                if(IsSuccess)
+                {
+                    Log.Information($"Added new User with Username: {username}");
+                }else
+                {
+                    Log.Error($"Error while adding new User. Message: {responseMessage}");
+                }
                 return IsSuccess;
             }
         }

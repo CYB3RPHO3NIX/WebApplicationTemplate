@@ -60,10 +60,11 @@ namespace WebApplication.Controllers
                 responseMessage = parameters.Get<string>("Message");
                 if(IsSuccess)
                 {
-                    Log.Information($"Added new User with Username: {username}");
-                }else
+                    Log.ForContext("Username", username).Information($"Successfully added new user.");
+                }
+                else
                 {
-                    Log.Error($"Error while adding new User. Message: {responseMessage}");
+                    Log.ForContext("Username", username).Error($"Error while adding new User. Issue: {responseMessage}");
                 }
                 return IsSuccess;
             }

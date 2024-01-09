@@ -1,12 +1,13 @@
 ﻿CREATE PROCEDURE [dbo].[InsertUser]
     @Username VARCHAR(500),
+    @EmailId VARCHAR(500),
     @Password VARCHAR(1000),
     @IsSuccess BIT OUTPUT,
     @Message VARCHAR(500) OUTPUT
 AS
 BEGIN
     -- Check if the user already exists
-    IF NOT EXISTS (SELECT 1 FROM dbo.Users WHERE Username = @Username)
+    IF NOT EXISTS (SELECT 1 FROM dbo.Users WHERE Username = @Username OR EmailId = @EmailId)
     BEGIN
         DECLARE @Salt VARCHAR(500);
         DECLARE @PasswordHash VARCHAR(1000);
@@ -20,8 +21,8 @@ BEGIN
 
         SET @DefaultRoleId = (SELECT RoleId FROM Roles Where IsDefault = 1);
         -- Insert the new user with the generated salt and password hash
-        INSERT INTO dbo.Users (Username, PasswordHash, PasswordSalt, RoleId)
-        VALUES (@Username, @PasswordHash, @Salt, @DefaultRoleId);
+        INSERT INTO dbo.Users (Username, EmailId, PasswordHash, PasswordSalt, RoleId)
+        VALUES (@Username, @EmailId, @PasswordHash, @Salt, @DefaultRoleId);
 
         SET @IsSuccess = 1;
         SET @Message = 'User Inserted Successfully.';

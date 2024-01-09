@@ -1,17 +1,20 @@
-﻿CREATE PROCEDURE [dbo].[ValidateUser]
-    @Username VARCHAR(500),
-    @Password VARCHAR(1000)
+﻿CREATE PROCEDURE [dbo].[ValidateUserByEmailId]
+    @EmailId VARCHAR(500),
+    @Password VARCHAR(1000),
+    @UserId BIGINT OUTPUT,
+    @IsValid BIT OUTPUT,
+    @Message VARCHAR(500) OUTPUT
 AS
 BEGIN
     DECLARE @StoredPasswordHash VARCHAR(1000);
     DECLARE @StoredPasswordSalt VARCHAR(500);
-
+    SET @UserId = 0;
     -- Get PasswordHash and PasswordSalt based on the provided Username
-    SELECT 
+    SELECT
         @StoredPasswordHash = PasswordHash,
         @StoredPasswordSalt = PasswordSalt
     FROM dbo.Users
-    WHERE Username = @Username;
+    WHERE EmailId = @EmailId;
 
     -- Check if the user exists
     IF @StoredPasswordHash IS NOT NULL
@@ -22,10 +25,20 @@ BEGIN
 
         -- Check if the input password hash matches the stored password hash
         IF @InputPasswordHash = @StoredPasswordHash
-            SELECT @Username AS 'ValidUser'; -- Return the username for a valid user
+        BEGIN
+            SELECT @UserId = UserId FROM dbo.Users WHERE EmailId = @EmailId;
+            SET @Message = 'Valid User';
+            SET @IsValid = 1;
+        END
         ELSE
-            PRINT 'Invalid Username/password';
+        BEGIN
+            SET @Message = 'Invalid Username/password';
+            SET @IsValid = 0;
+        END
     END
     ELSE
-        PRINT 'Invalid Username/password';
+    BEGIN
+        SET @Message = 'No such user exists.';
+        SET @IsValid = 0;
+    END
 END

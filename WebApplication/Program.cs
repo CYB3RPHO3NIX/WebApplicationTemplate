@@ -1,6 +1,7 @@
 using Serilog.Events;
 using Serilog.Sinks.MSSqlServer;
 using Serilog;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace WebApplication
 {
@@ -30,6 +31,14 @@ namespace WebApplication
             .CreateLogger();
             builder.Services.AddSingleton<IConfiguration>(configuration);
             builder.Services.AddHttpContextAccessor();
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            }).AddCookie(options =>
+            {
+                options.LoginPath = "/Account/ShowSignInPage";
+                options.AccessDeniedPath = "/Account/AccessDenied";
+            });
             builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
 
             builder.Services.ConfigureApplicationCookie(options =>
@@ -53,7 +62,8 @@ namespace WebApplication
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-
+            app.UseAuthentication();
+            app.UseAuthorization();
             app.UseRouting();
 
             app.UseAuthorization();

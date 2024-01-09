@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
@@ -56,7 +57,7 @@ namespace WebApplication.Controllers
             var user = Validate(userData);
             if(user != null)
             {
-                LoginAsync(user);
+                await LoginAsync(user);
                 RedirectToAction("Home", "Home"); //this is not working
             }
             return View();
@@ -71,7 +72,7 @@ namespace WebApplication.Controllers
                 new Claim(ClaimTypes.Role, user.Role)
             };
 
-            var identity = new ClaimsIdentity(claims);
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);
 
             await _httpContextAccessor.HttpContext.SignInAsync(principal);

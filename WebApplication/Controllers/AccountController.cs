@@ -4,6 +4,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using System.Data;
+using WebApplication.Models;
 
 namespace WebApplication.Controllers
 {
@@ -29,11 +30,11 @@ namespace WebApplication.Controllers
             return View(@"Views\Account\SignIn.cshtml");
         }
         [HttpPost]
-        public async Task<IActionResult> SignUp(string username, string password1, string password2)
+        public async Task<IActionResult> SignUp(SignUpModel data)
         {
-            if(password1.Equals(password2))
+            if(data.Password.Equals(data.PasswordConfirm))
             {
-                RegisterNewUser(username, password1);
+                RegisterNewUser(data);
             }
             return View();
         }
@@ -41,18 +42,32 @@ namespace WebApplication.Controllers
         {
             return View();
         }
-        public bool IsUsernameTaken()
-        {
-
-        }
-        public bool RegisterNewUser(string username, string email, string password)
+        public bool IsUsernameTaken(string username)
         {
             using (IDbConnection dbConnection = new SqlConnection(_connectionString))
             {
                 dbConnection.Open();
                 var parameters = new DynamicParameters();
                 parameters.Add("Username", username, DbType.String, ParameterDirection.Input);
-                parameters.Add("Password", password, DbType.String, ParameterDirection.Input);
+                bool IsTaken = false;
+                parameters.Add("IsTaken", IsTaken, DbType.Boolean, ParameterDirection.Output);
+
+                dbConnection.Query("dbo.IsUsernameTaken", parameters, commandType: CommandType.StoredProcedure);
+
+                IsTaken = parameters.Get<bool>("IsTaken");
+
+                return IsTaken;
+            }
+        }
+        public bool RegisterNewUser(SignUpModel userData)
+        {
+            using (IDbConnection dbConnection = new SqlConnection(_connectionString))
+            {
+                dbConnection.Open();
+                var parameters = new DynamicParameters();
+                parameters.Add("Username", userData.Username, DbType.String, ParameterDirection.Input);
+                parameters.Add("Password", userData.Password, DbType.String, ParameterDirection.Input);
+                parameters.Add("EmailId", userData.Email, DbType.String, ParameterDirection.Input);
 
                 string responseMessage = string.Empty;
                 bool IsSuccess = false;
@@ -64,11 +79,11 @@ namespace WebApplication.Controllers
                 responseMessage = parameters.Get<string>("Message");
                 if(IsSuccess)
                 {
-                    Log.ForContext("Username", username).Information($"Successfully added new user.");
+                    Log.ForContext("Username", userData.Username).Information($"Successfully added new user.");
                 }
                 else
                 {
-                    Log.ForContext("Username", username).Error($"Error while adding new User. Issue: {responseMessage}");
+                    Log.ForContext("Username", userData.Username).Error($"Error while adding new User. Issue: {responseMessage}");
                 }
                 return IsSuccess;
             }

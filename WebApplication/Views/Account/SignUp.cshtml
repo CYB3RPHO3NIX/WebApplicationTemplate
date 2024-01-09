@@ -1,13 +1,50 @@
 ﻿<h2>Sign-Up Page</h2>
 <form method="post" action="/Account/SignUp">
-    <label>New Username</label>
-    <input type="text" name="Username" placeholder="Enter username" />
-    <label>Email ID</label>
-    <input type="text" name="EmailId" placeholder="Enter username" />
-    <label>New Password</label>
-    <input type="password" name="Password" placeholder="Enter password" />
-    <label>Confirm Password</label>
-    <input type="password" name="PasswordConfirm" placeholder="Enter password" />
-    <button type="submit">Register</button>
-    <button type="reset">Reset Form</button>
+    <table border="0">
+        <tr>
+            <td><label>New Username</label></td>
+            <td><input id="txtValidity" type="text" name="Username" placeholder="Enter username" /></td>
+            <td><label id="lblValidity"></label></td>
+        </tr>
+        <tr>
+            <td><label>Email ID</label></td>
+            <td colspan="2"><input type="text" name="Email" placeholder="Enter Email Id" /></td>
+        </tr>
+        <tr>
+            <td><label>New Password</label></td>
+            <td colspan="2"><input type="password" name="Password" placeholder="Enter password" /></td>
+        </tr>
+        <tr>
+            <td><label>Confirm Password</label></td>
+            <td colspan="2"><input type="password" name="PasswordConfirm" placeholder="Confirm password" /></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td align="right"><button type="submit">Register</button></td>
+            <td><button type="reset">Reset Form</button></td>
+        </tr>
+    </table>
 </form>
+
+@section Scripts{
+    <script>
+        $('#txtValidity').on('input', function () {
+            $.ajax({
+                url: "/Account/IsUsernameTaken",
+                type: "GET",
+                async: false,
+                data: { "username" : $('#txtValidity').val() } ,
+                success: function (data) {
+                    if (data == true) {
+                        $('#lblValidity').text('Username already taken');
+                    } else {
+                        $('#lblValidity').text('Username available');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error:", error);
+                }
+            });
+        });
+    </script>
+}

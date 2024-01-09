@@ -41,7 +41,11 @@ namespace WebApplication.Controllers
         {
             return View();
         }
-        public bool RegisterNewUser(string username, string password)
+        public bool IsUsernameTaken()
+        {
+
+        }
+        public bool RegisterNewUser(string username, string email, string password)
         {
             using (IDbConnection dbConnection = new SqlConnection(_connectionString))
             {

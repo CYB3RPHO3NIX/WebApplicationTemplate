@@ -67,6 +67,7 @@
     <Build Include="StoredProcedures\RegisterUser.sql" />
     <Build Include="StoredProcedures\GetUser.sql" />
     <Build Include="StoredProcedures\ValidateUserByEmailId.sql" />
+    <Build Include="StoredProcedures\IsUsernameTaken.sql" />
   </ItemGroup>
   <ItemGroup>
     <RefactorLog Include="Database.refactorlog" />

@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
-using WebApplication.Models;
 
-namespace WebApplication.Controllers.HomeController
+namespace WebApplication.Controllers
 {
     public class HomeController : Controller
     {
@@ -15,7 +14,7 @@ namespace WebApplication.Controllers.HomeController
 
         public IActionResult Index()
         {
-            return View();
+            return View(@"Views\Home\Index.cshtml");
         }
     }
 }

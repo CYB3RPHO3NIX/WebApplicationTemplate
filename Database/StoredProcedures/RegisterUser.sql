@@ -1,7 +1,8 @@
 ﻿CREATE PROCEDURE [dbo].[InsertUser]
     @Username VARCHAR(500),
     @Password VARCHAR(1000),
-    @RoleId BIGINT
+    @IsSuccess BIT OUTPUT,
+    @Message VARCHAR(500) OUTPUT
 AS
 BEGIN
     -- Check if the user already exists
@@ -9,6 +10,7 @@ BEGIN
     BEGIN
         DECLARE @Salt VARCHAR(500);
         DECLARE @PasswordHash VARCHAR(1000);
+        DECLARE @DefaultRoleId bigint;
 
         -- Generate a random salt
         SET @Salt = CAST(NEWID() AS VARCHAR(500));
@@ -16,18 +18,17 @@ BEGIN
         -- Hash the password with the generated salt
         SET @PasswordHash = HASHBYTES('SHA2_256', CAST(@Password AS NVARCHAR(MAX)) + @Salt);
 
+        SET @DefaultRoleId = (SELECT RoleId FROM Roles Where IsDefault = 1);
         -- Insert the new user with the generated salt and password hash
         INSERT INTO dbo.Users (Username, PasswordHash, PasswordSalt, RoleId)
-        VALUES (@Username, @PasswordHash, @Salt, @RoleId);
+        VALUES (@Username, @PasswordHash, @Salt, @DefaultRoleId);
 
-        IF @@ERROR = 0
-            RETURN 1; -- Successful transaction
-        ELSE
-            RETURN 0; -- Transaction failed
+        SET @IsSuccess = 1;
+        SET @Message = 'User Inserted Successfully.';
     END
     ELSE
     BEGIN
-        -- User already exists, return 0 to indicate failure
-        RETURN 0; -- Transaction failed
+        SET @IsSuccess = 0;
+        SET @Message = 'User already exists.';
     END
 END

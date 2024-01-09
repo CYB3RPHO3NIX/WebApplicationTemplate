@@ -16,5 +16,9 @@ namespace WebApplication.Controllers
         {
             return View(@"Views\Home\Index.cshtml");
         }
+        public IActionResult Home()
+        {
+            return View(@"Views\Home\Home.cshtml");
+        }
     }
 }

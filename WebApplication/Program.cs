@@ -29,7 +29,18 @@ namespace WebApplication
                 restrictedToMinimumLevel: LogEventLevel.Information)
             .CreateLogger();
             builder.Services.AddSingleton<IConfiguration>(configuration);
+            builder.Services.AddHttpContextAccessor();
             builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
+
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                options.Cookie.HttpOnly = true;
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+                options.LoginPath = "/Account/ShowSignInPage";
+                options.AccessDeniedPath = "/Account/AccessDenied";
+                options.SlidingExpiration = true;
+                options.LogoutPath = "/Account/SignOut";
+            });
 
             var app = builder.Build();
 

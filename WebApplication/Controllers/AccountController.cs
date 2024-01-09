@@ -1,9 +1,11 @@
 ﻿using Dapper;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using System.Data;
+using System.Security.Claims;
 using WebApplication.Models;
 
 namespace WebApplication.Controllers
@@ -12,12 +14,18 @@ namespace WebApplication.Controllers
     {
         private readonly IConfiguration _config;
         private readonly string _connectionString;
-        public AccountController(IConfiguration config)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        public AccountController(IConfiguration config, IHttpContextAccessor httpContextAccessor)
         {
             _config = config;
             _connectionString = _config.GetConnectionString("Database");
+            _httpContextAccessor = httpContextAccessor;
         }
         public IActionResult Index()
+        {
+            return View();
+        }
+        public IActionResult AccessDenied()
         {
             return View();
         }
@@ -38,9 +46,83 @@ namespace WebApplication.Controllers
             }
             return View();
         }
-        public async Task<IActionResult> SignIn()
+        
+        public async Task SignOutAsync()
         {
+            await _httpContextAccessor.HttpContext.SignOutAsync();
+        }
+        public async Task<IActionResult> SignIn(SignInModel userData)
+        {
+            var user = Validate(userData);
+            if(user != null)
+            {
+                LoginAsync(user);
+                RedirectToAction("Home", "Home"); //this is not working
+            }
             return View();
+        }
+        public async Task LoginAsync(User user)
+        {
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Username),
+                new Claim(ClaimTypes.SerialNumber, user.UserId.ToString()),
+                new Claim(ClaimTypes.Email, user.EmailId),
+                new Claim(ClaimTypes.Role, user.Role)
+            };
+
+            var identity = new ClaimsIdentity(claims);
+            var principal = new ClaimsPrincipal(identity);
+
+            await _httpContextAccessor.HttpContext.SignInAsync(principal);
+        }
+        public User Validate(SignInModel userData)
+        {
+            using (IDbConnection dbConnection = new SqlConnection(_connectionString))
+            {
+                dbConnection.Open();
+                var parameters = new DynamicParameters();
+                parameters.Add("Password", userData.Password, DbType.String, ParameterDirection.Input);
+
+                int userId = 0;
+                bool IsValid = false;
+                string Message = string.Empty;
+
+                parameters.Add("IsValid", IsValid, DbType.Boolean, ParameterDirection.Output);
+                parameters.Add("UserId", userId, DbType.Int32, ParameterDirection.Output);
+                parameters.Add("Message", Message, DbType.String, ParameterDirection.Output);
+
+                if(!string.IsNullOrEmpty(userData.Username))
+                {
+                    parameters.Add("Username", userData.Username, DbType.String, ParameterDirection.Input);
+                    dbConnection.Query("dbo.ValidateUserByUsername", parameters, commandType: CommandType.StoredProcedure);
+                }
+                else if(!string.IsNullOrEmpty(userData.Email))
+                {
+                    parameters.Add("EmailId", userData.Email, DbType.String, ParameterDirection.Input);
+                    dbConnection.Query("dbo.ValidateUserByEmailId", parameters, commandType: CommandType.StoredProcedure);
+                }
+                IsValid = parameters.Get<bool>("IsValid");
+                
+                if (IsValid) 
+                {
+                    userId = parameters.Get<int>("UserId");
+                    return GetUserDetails(userId);
+                }
+                return null;
+            }
+        }
+        public User GetUserDetails(int userId)
+        {
+            using (IDbConnection dbConnection = new SqlConnection(_connectionString))
+            {
+                dbConnection.Open();
+                var parameters = new DynamicParameters();
+                parameters.Add("UserId", userId, DbType.Int32, ParameterDirection.Input);
+                var result = dbConnection.Query<User>("dbo.GetUser", parameters, commandType: CommandType.StoredProcedure);
+                if (result.Count() > 0) return result.FirstOrDefault();
+                else return null;
+            }
         }
         public bool IsUsernameTaken(string username)
         {

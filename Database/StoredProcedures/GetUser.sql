@@ -3,7 +3,11 @@
 AS
 BEGIN
     SELECT 
-        Username
-    FROM dbo.Users
+        UserId,
+        Username,
+        EmailId,
+        r.RoleName as 'Role'
+    FROM dbo.Users u
+    INNER JOIN dbo.Roles r ON u.RoleId = r.RoleId
     WHERE UserId = @UserId;
 END

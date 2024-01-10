@@ -48,9 +48,10 @@ namespace WebApplication.Controllers
             return View();
         }
         
-        public async Task SignOutAsync()
+        public async Task<IActionResult> SignOutAsync()
         {
-            await _httpContextAccessor.HttpContext.SignOutAsync();
+            await _httpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return View(@"Views\Home\Index.cshtml");
         }
         public async Task<IActionResult> SignIn(SignInModel userData)
         {
@@ -58,7 +59,7 @@ namespace WebApplication.Controllers
             if(user != null)
             {
                 await LoginAsync(user);
-                RedirectToAction("Home", "Home"); //this is not working
+                return View(@"Views\Home\Home.cshtml"); //this is not working
             }
             return View();
         }

@@ -45,7 +45,7 @@ namespace WebApplication.Controllers
             {
                 RegisterNewUser(data);
             }
-            return View();
+            return View(@"Views\Home\Index.cshtml");
         }
         
         public async Task<IActionResult> SignOutAsync()
@@ -61,7 +61,7 @@ namespace WebApplication.Controllers
                 await LoginAsync(user);
                 return View(@"Views\Home\Home.cshtml"); //this is not working
             }
-            return View();
+            return View(@"Views\Home\Index.cshtml");
         }
         public async Task LoginAsync(User user)
         {
